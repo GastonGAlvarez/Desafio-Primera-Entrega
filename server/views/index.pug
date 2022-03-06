@@ -1,0 +1,9 @@
+extends layouts/base.pug
+
+block main
+  h1 Hola, bienvenidos
+  p Nuestros productos!
+  ul
+    each product in products
+      li= product.name 
+        

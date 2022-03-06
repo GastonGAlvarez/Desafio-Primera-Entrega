@@ -1,0 +1,9 @@
+extends layouts/base.pug
+
+block form
+  form(action="/add" method="post")
+    div
+      label(for="name") Producto
+      input(name="name")
+    div
+      button(type="submit") Enviar
