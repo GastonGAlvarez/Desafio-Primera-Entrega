@@ -5,14 +5,31 @@ class CartProducts {
         this.file = file;
     }
 
-    async save(obj) {
+    async createNewCart(prods){
         const text = await fs.readFile( this.file , 'utf8' );
         const data = JSON.parse(text);
         const last = data[data.length - 1];
-        data.push({ id: last.id + 1, ...obj})
+        if(!prods){
+            data.push({ id: last.id + 1, prods})
+        }
+        else data.push({ id: last.id + 1 })
 
         await fs.writeFile(this.file, JSON.stringify(data, null, 2), 'utf8');
         return last.id + 1;
+    }
+
+    async saveProds(prods, id) {
+        const text = await fs.readFile( this.file , 'utf8' );
+        const data = JSON.parse(text);
+
+        let index = data.findIndex(elem => elem.id === id)
+        if(index !== -1){
+            data[index].push({ ...prods });
+        }
+        else console.log("No existe un carrito con ese id");
+        
+        await fs.writeFile(this.file, JSON.stringify(data, null, 2), 'utf8');
+        return console.log("Productos añadidos correctamente en el carrito.");
     }
 
     async getById(id) {
@@ -24,13 +41,6 @@ class CartProducts {
             return data[index]
         }
         else return null;
-    }
-
-    async getAll() {
-        const text = await fs.readFile( this.file , 'utf8' );
-        const data = JSON.parse(text);
-
-        return data;
     }
 
     async deleteById(id) {
@@ -45,10 +55,17 @@ class CartProducts {
         else console.log("El id no existe o es erróneo");
     }
 
-    async deleteAll() {
-        const data = [];
-        await fs.writeFile(this.file, JSON.stringify(data), 'utf8');
+    async deleteProdById(id, prodId){
+        const text = await fs.readFile( this.file , 'utf8' );
+        const data = JSON.parse(text);
+
+        let index = data.findIndex(elem => elem.id === id)
+        if(index !== -1){
+            await fs.writeFile(this.file, JSON.stringify(data), 'utf8');
+        }
+        else console.log("El id no existe o es erróneo");
     }
+
 }
 
 module.exports = CartProducts;
