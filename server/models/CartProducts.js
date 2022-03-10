@@ -3,69 +3,89 @@ const fs = require('fs').promises;
 class CartProducts {
     constructor(file) {
         this.file = file;
+        this.data = [];
     }
 
-    async createNewCart(prods){
-        const text = await fs.readFile( this.file , 'utf8' );
-        const data = JSON.parse(text);
-        const last = data[data.length - 1];
-        if(!prods){
-            data.push({ id: last.id + 1, prods})
-        }
-        else data.push({ id: last.id + 1 })
+    async createNewCart(cart){
+        await this.readData();
 
-        await fs.writeFile(this.file, JSON.stringify(data, null, 2), 'utf8');
-        return last.id + 1;
+        cart.timestamp = Date.now();
+        cart.id = this.data[this.data.length - 1].id + 1
+        this.data.push(cart)
+
+        await this.writeData();
     }
 
-    async saveProds(prods, id) {
-        const text = await fs.readFile( this.file , 'utf8' );
-        const data = JSON.parse(text);
+    async saveNewProd(prod, id) {
+        await this.readData();
 
-        let index = data.findIndex(elem => elem.id === id)
-        if(index !== -1){
-            data[index].push({ ...prods });
+        const cart = this.data.find(elem => elem.id == id)
+        if(!cart){
+            throw new Error("El carrito no existe");
         }
-        else console.log("No existe un carrito con ese id");
+
+        const productExist = cart.products.find(elem => elem.id == id);
+        if(!productExist){
+            cart.products.push(prod);
+        }else{
+            throw new Error("El producto ya esta en el carro.");
+        }
         
-        await fs.writeFile(this.file, JSON.stringify(data, null, 2), 'utf8');
-        return console.log("Productos añadidos correctamente en el carrito.");
+        await this.writeData();
     }
 
     async getById(id) {
-        const text = await fs.readFile( this.file , 'utf8' );
-        const data = JSON.parse(text);
+        await this.readData();
 
-        let index = data.findIndex(elem => elem.id === id)
+        let index = this.data.findIndex(elem => elem.id == id)
         if(index !== -1){
-            return data[index]
-        }
-        else return null;
+            return this.data[index].products;
+        }else{
+            throw new Error("No existe un carrito con ese ID");
+        } 
     }
 
     async deleteById(id) {
-        const text = await fs.readFile( this.file , 'utf8' );
-        const data = JSON.parse(text);
+        await this.readData();
 
-        let index = data.findIndex(elem => elem.id === id)
+        let index = this.data.findIndex(elem => elem.id == id)
         if(index !== -1){
-            data.splice(index, 1);
-            await fs.writeFile(this.file, JSON.stringify(data), 'utf8');
+            this.data.splice(index, 1);
+            await this.writeData();
         }
-        else console.log("El id no existe o es erróneo");
+        else{
+            throw new Error("No existe un carrito con ese ID");
+        }
     }
 
     async deleteProdById(id, prodId){
-        const text = await fs.readFile( this.file , 'utf8' );
-        const data = JSON.parse(text);
+        await this.readData();
 
-        let index = data.findIndex(elem => elem.id === id)
+        let index = this.data.findIndex(elem => elem.id == id)
         if(index !== -1){
-            await fs.writeFile(this.file, JSON.stringify(data), 'utf8');
+            let indexProd = this.data[index].products.findIndex(elem => elem.id == prodId)
+            if(indexProd !== -1){
+                this.data[index].products.splice(indexProd, 1);
+                await this.writeData();
+            }else{
+                throw new Error("El carrito no contiene un producto con ese ID");
+            }
         }
-        else console.log("El id no existe o es erróneo");
+        else{
+            throw new Error("No existe un carrito con ese ID");
+        }
+    }
+
+    async readData(){
+        const text = await fs.readFile( this.file , 'utf8' );
+        this.data = JSON.parse(text);
+    }
+
+    async writeData(){
+        await fs.writeFile(this.file, JSON.stringify(this.data, null, 2), 'utf8');
     }
 
 }
+
 
 module.exports = CartProducts;

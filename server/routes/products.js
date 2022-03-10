@@ -6,8 +6,9 @@ const admin = require('../server.js');
 const router = new Router();
 const productsClass = new Products(path.join(__dirname, '../database/products.json'));
 
-router.get(['/', '/:id'], async (req, res) => {
+router.get('/:id?', async (req, res) => {
     const id = req.params.id;
+
     if(!id){
         const products = await productsClass.getAll();
         res.render('index', { products });
@@ -18,18 +19,18 @@ router.get(['/', '/:id'], async (req, res) => {
             res.render('index', { products });
         }
         else{
-            res.send({error: -1, descripción: 'route /:id method GET not product with that id' })
+            res.send({error: -1, descripción: 'route /:id? method GET not product with that id' })
         }
     }
 });
 
-router.post('/add', (req, res) => {
+router.post('/', (req, res) => {
     if(admin){
         const newProduct = req.body;
         productsClass.save(newProduct);
         res.render('result', { newProduct });
     }else{
-        res.send({error: -1, descripción: 'route /add method POST not authorized' })
+        res.send({error: -1, descripción: 'route / method POST not authorized' })
     }
 });
 
@@ -38,8 +39,7 @@ router.put('/:id', async (req, res) => {
         const id = req.params.id;
         const productUpdate = req.body;
         productsClass.saveById(id, productUpdate);
-        const newProduct = await productsClass.getById(id);
-        res.render('result', { newProduct })
+        res.render('result', { productUpdate });
     }else{
         res.send({error: -1, descripción: 'route /:id method PUT not authorized' })
     }
