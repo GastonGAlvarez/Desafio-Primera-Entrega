@@ -1,8 +1,20 @@
 const fs = require('fs').promises;
+const knex = require('knex');
 
-class CartProducts {
-    constructor(file) {
-        this.file = file;
+class Cart {
+    constructor() {
+        this.db = knex(
+            this.productDbConfig = {
+                client: 'mysql',
+                connection: {
+                    host: 'localhost',
+                    port: 3306,
+                    user: 'root',
+                    database: 'products_db'
+                }
+            }
+        )
+        
         this.data = [];
     }
 
@@ -88,4 +100,4 @@ class CartProducts {
 }
 
 
-module.exports = CartProducts;
+module.exports = new Cart();

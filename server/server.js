@@ -1,24 +1,29 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const path = require('path');
-const productsRouter = require('./routes/products.js');
-const cartRouter = require('./routes/cart.js');
+
+const { HOSTNAME, SCHEMA, DATABASE, USER, PASSWORD, OPTIONS } = require("./config");
+const adminMiddleware = require('./middlewares/admin.js');
+const productsRouter = require('./routes/mongodb/products.js');
+const cartRouter = require('./routes/mongodb/cart.js');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-const admin = true;
+// Mongoose Connection
+mongoose.connect(`${SCHEMA}://${USER}:${PASSWORD}@${HOSTNAME}/${DATABASE}?${OPTIONS}`).then(() => {
+    
+    // Middlewares Body
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    app.use('/static', express.static(path.join(__dirname, 'public')));
 
-app.set('views', __dirname + '/views');
-app.set('view engine', 'pug');  
+    // Routes
+    app.use('/api/products', adminMiddleware, productsRouter);
+    // app.use('/api/cart', adminMiddleware, cartRouter);
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use('/static', express.static(path.join(__dirname, 'public')));
+    // Listen
+    app.listen(PORT, () => console.log(`Escuchando en el puerto ${PORT}`) );
 
-app.get('/', (req, res) => res.send("Hola mundo!"));
-app.use('/api/products', productsRouter);
-app.use('/api/cart', cartRouter);
+}).catch((err) => console.log("Error al conectar con Mongo Cloud", err))
 
-
-
-app.listen(PORT, () => console.log(`Escuchando en el puerto ${PORT}`) );
